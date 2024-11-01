@@ -97,13 +97,31 @@ def update_article(article_id):
 @app.route('/articles/<int:article_id>', methods=['DELETE'])
 def delete_article(article_id):
     article = Article.query.get_or_404(article_id)
+    comments = Comment.query.filter_by(article_id=article_id).all()
+    for comment in comments:
+        db.session.delete(comment)
     db.session.delete(article)
     db.session.commit()
     return '', 204
 
+# Endpoint pour récupérer tous les commentaires
+@app.route('/comments', methods=['GET'])
+def get_all_comments():
+    comments = Comment.query.all()
+    return jsonify([{
+        'comment_id': c.comment_id,
+        'content': c.content,
+        'author': c.author,
+        'article_id': c.article_id,
+        'links': {
+            'self': f'/articles/{c.article_id}'
+        }
+    } for c in comments])
+
 # Endpoint pour récupérer les commentaires d'un article
 @app.route('/articles/<int:article_id>/comments', methods=['GET'])
 def get_comments(article_id):
+    Article.query.get_or_404(article_id)
     comments = Comment.query.filter_by(article_id=article_id).all()
     return jsonify([{
         'comment_id': c.comment_id,
@@ -115,6 +133,7 @@ def get_comments(article_id):
 # Endpoint pour récupérer un commentaire spécifique d'un article
 @app.route('/articles/<int:article_id>/comments/<int:comment_index>', methods=['GET'])
 def get_comment(article_id, comment_index):
+    Article.query.get_or_404(article_id)
     comments = Comment.query.filter_by(article_id=article_id).all()
     if comment_index < 0 or comment_index >= len(comments):
         return jsonify({"error": "Comment index out of range"}), 404
@@ -141,9 +160,9 @@ def create_comment(article_id):
     }), 201
 
 # Endpoint pour supprimer un commentaire
-@app.route('/articles/<int:article_id>/comments/<int:comment_id>', methods=['DELETE'])
-def delete_comment(article_id, comment_id):
-    comment = Comment.query.filter_by(article_id=article_id, comment_id=comment_id).first_or_404()
+@app.route('/comments/<int:comment_id>', methods=['DELETE'])
+def delete_comment(comment_id):
+    comment = Comment.query.filter_by(comment_id=comment_id).first_or_404()
     db.session.delete(comment)
     db.session.commit()
     return '', 204

@@ -5,6 +5,11 @@ from models import db, Article, Comment
 fake = Faker()
 
 def populate_database(nb_articles):
+    
+    if Article.query.count() > 0:
+        print("Base de données déja populated.")
+        return
+    
     for _ in range(nb_articles):
         title = fake.sentence(nb_words=5)
         slug = fake.slug()
