@@ -38,6 +38,9 @@ interface ApiService {
     @GET("articles/{article_id}/comments")
     suspend fun getCommentsForArticle(@Path("article_id") articleId: Int): List<Comment>
 
+    @GET("articles/{article_id}/comments/{comment_id}")
+    suspend fun getCommentForArticle( @Path("article_id") articleId: Int, @Path("comment_id") commentId: Int): Comment
+
     @POST("articles/{article_id}/comments")
     suspend fun createComment(@Path("article_id") articleId: Int, @Body comment: Comment): Response<Comment>
 

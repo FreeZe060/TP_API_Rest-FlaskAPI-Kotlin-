@@ -45,29 +45,29 @@ fun main() = runBlocking {
             println("ID: ${article.article_id}, Titre: ${article.title}, Auteur: ${article.author}\n")
         }
 
-        searchArticleByName(apiService, "Operation billion still buy baby")
+        // searchArticleByName(apiService, "Operation billion still buy baby")
 
-        val newArticle = Article(0, "New Article Title", "This is the content", "slug-test", "Author Name")
-        val createdArticleResponse = apiService.createArticle(newArticle)
-        println("\nCréation d'un nouvel article :")
-        println("Article créé : ${createdArticleResponse.body()}\n")
+        // val newArticle = Article(0, "New Article Title", "This is the content", "slug-test", "Author Name")
+        // val createdArticleResponse = apiService.createArticle(newArticle)
+        // println("\nCréation d'un nouvel article :")
+        // println("Article créé : ${createdArticleResponse.body()}\n")
 
-        val articleId = 1  
-        val retrievedArticle = apiService.getArticle(articleId)
-        println("\nArticle récupéré :\nID: ${retrievedArticle.article_id}, Titre: ${retrievedArticle.title}\n")
+        val articleId = 2
+        // val retrievedArticle = apiService.getArticle(articleId)
+        // println("\nArticle récupéré :\nID: ${retrievedArticle.article_id}, Titre: ${retrievedArticle.title}\n")
 
-        val articleUpdatesFull = mapOf(
-            "title" to "Nouveau titre",
-            "content" to "Nouveau contenu",
-            "slug" to "nouveau-slug",
-            "author" to "Nouvel auteur"
-        )
-        val updatedArticleResponseFull = apiService.updateArticle(articleId, articleUpdatesFull)
-        if (updatedArticleResponseFull.isSuccessful) {
-            println("\nArticle mis à jour : \n  ${updatedArticleResponseFull.body()}")
-        } else {
-            println("Erreur lors de la mise à jour de l'article : ${updatedArticleResponseFull.errorBody()}")
-        }
+        // val articleUpdatesFull = mapOf(
+        //     "title" to "Nouveau titre",
+        //     "content" to "Nouveau contenu",
+        //     "slug" to "nouveau-slug",
+        //     "author" to "Nouvel auteur"
+        // )
+        // val updatedArticleResponseFull = apiService.updateArticle(articleId, articleUpdatesFull)
+        // if (updatedArticleResponseFull.isSuccessful) {
+        //     println("\nArticle mis à jour : \n  ${updatedArticleResponseFull.body()}")
+        // } else {
+        //     println("Erreur lors de la mise à jour de l'article : ${updatedArticleResponseFull.errorBody()}")
+        // }
 
         // val articleUpdatesPartial = mapOf(
         //     "content" to "Contenu modifié"
@@ -79,31 +79,58 @@ fun main() = runBlocking {
         //     println("Erreur lors de la mise à jour partielle de l'article : ${updatedArticleResponsePartial.errorBody()}")
         // }
 
-
-        apiService.deleteArticle(articleId)
-        println("\nArticle avec ID $articleId supprimé\n")
-
-        val comments = apiService.getCommentsForArticle(articleId)
-        println("\nCommentaires pour l'article $articleId :")
-        comments.forEach { comment ->
-            println("\nID: ${comment.comment_id}, Contenu: ${comment.content}, Auteur: ${comment.author}")
+        val responseArticle = apiService.headArticle(articleId)
+        if (responseArticle.isSuccessful) {
+            // Accéder aux en-têtes
+            val lastModified = responseArticle.headers()["Last-Modified"]
+            val articleExist = responseArticle.headers()["X-Article-Exist"]
+            
+            // Affichage des en-têtes
+            println("Article - Last-Modified: $lastModified")
+            println("Article - X-Article-Exist: $articleExist")
+        } else {
+            println("Erreur lors de l'appel HEAD pour l'article : ${responseArticle.code()}")
         }
 
-        val newComment = Comment(0, "Nouveau commentaire", "Auteur de commentaire", articleId)
-        val createdCommentResponse = apiService.createComment(articleId, newComment)
-        println("\nCommentaire créé : \n ${createdCommentResponse.body()}")
+        // apiService.deleteArticle(articleId)
+        // println("\nArticle avec ID $articleId supprimé\n")
 
         val commentId = 1
-        // val commentUpdatesFull = mapOf(
-        //     "content" to "Contenu complètement modifié",  
-        //     "author" to "Auteur complètement modifié"     
-        // )
-        // val updatedCommentResponseFull = apiService.putComment(commentId, commentUpdatesFull)
-        // if (updatedCommentResponseFull.isSuccessful) {
-        //     println("\nCommentaire mis à jour : \n ${updatedCommentResponseFull.body()}")
-        // } else {
-        //     println("Erreur lors de la mise à jour complète du commentaire : ${updatedCommentResponseFull.errorBody()}")
+
+        // val comments = apiService.getAllComments()
+        // println("\nTous les commentaires :")
+        // comments.forEach { comment ->
+        //     println("\nID: ${comment.comment_id}, Contenu: ${comment.content}, Auteur: ${comment.author}")
         // }
+
+        // val commentsForArticle = apiService.getCommentsForArticle(articleId)
+        // println("\nCommentaires pour l'article $articleId :")
+        // commentsForArticle.forEach { comment ->
+        //     println("\nID: ${comment.comment_id}, Contenu: ${comment.content}, Auteur: ${comment.author}")
+        // }
+
+        // val comment = apiService.getCommentForArticle(articleId, commentId)
+        // println("\nCommentaire spécifique pour l'article $articleId :")
+        // println("\nID: ${comment.comment_id}, Contenu: ${comment.content}, Auteur: ${comment.author}")
+
+        // val newComment = Comment(0, "Nouveau commentaire", "Auteur de commentaire", articleId)
+        // val createdCommentResponse = apiService.createComment(articleId, newComment)
+        // println("\nCommentaire créé : \n ${createdCommentResponse.body()}")
+
+        
+        val commentUpdatesFull = mapOf(
+            "content" to "Contenu complètement modifié",  
+            "author" to "Auteur complètement modifié"     
+        )
+        val updatedCommentResponseFull = apiService.putComment(commentId, commentUpdatesFull)
+        if (updatedCommentResponseFull.isSuccessful) {
+            println("\nCommentaire mis à jour : \n ${updatedCommentResponseFull.body()}")
+        } else {
+            // Affichage du corps de l'erreur
+            val errorBody = updatedCommentResponseFull.errorBody()?.string()
+            println("Erreur lors de la mise à jour complète du commentaire : $errorBody")
+        }
+
 
         // val commentUpdatesPartial = mapOf(
         //     "content" to "Contenu modifié",
@@ -114,6 +141,21 @@ fun main() = runBlocking {
         // } else {
         //     println("Erreur lors de la mise à jour partielle du commentaire : ${updatedCommentResponsePartial.errorBody()}")
         // }
+
+        val responseComment = apiService.headComment(commentId)
+        if (responseComment.isSuccessful) {
+            // Accéder aux en-têtes
+            val lastModified = responseComment.headers()["Last-Modified"]
+            val etag = responseComment.headers()["ETag"]
+            val cacheControl = responseComment.headers()["Cache-Control"]
+            
+            // Affichage des en-têtes
+            println("Commentaire - Last-Modified: $lastModified")
+            println("Commentaire - ETag: $etag")
+            println("Commentaire - Cache-Control: $cacheControl")
+        } else {
+            println("Erreur lors de l'appel HEAD pour le commentaire : ${responseComment.code()}")
+        }
 
         // apiService.deleteComment(articleId, commentId)
         // println("\nCommentaire avec ID $commentId pour l'article $articleId supprimé\n")

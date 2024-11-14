@@ -196,6 +196,27 @@ def patch_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
     data = request.json
     if 'content' in data:
+        if not data['content'].strip():
+            return jsonify({"error": "Le contenu ne peut pas être vide"}), 400
+        comment.content = data['content']
+    if 'author' in data:
+        if not data['author'].strip():
+            return jsonify({"error": "L'auteur ne peut pas être vide"}), 400
+        comment.author = data['author']
+    # db.session.commit()
+    return jsonify({
+        'comment_id': comment.comment_id,
+        'content': comment.content,
+        'author': comment.author,
+        'article_id': comment.article_id
+    })
+
+
+@app.route('/comments/<int:comment_id>', methods=['PUT'])
+def put_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    data = request.json
+    if 'content' in data:
         comment.content = data['content']
     if 'author' in data:
         comment.author = data['author']
@@ -207,19 +228,6 @@ def patch_comment(comment_id):
         'article_id': comment.article_id
     })
 
-@app.route('/comments/<int:comment_id>', methods=['PUT'])
-def put_comment(comment_id):
-    comment = Comment.query.get_or_404(comment_id)
-    data = request.json
-    comment.content = data['content']  
-    comment.author = data['author']    
-    db.session.commit()
-    return jsonify({
-        'comment_id': comment.comment_id,
-        'content': comment.content,
-        'author': comment.author,
-        'article_id': comment.article_id
-    })
 
 @app.route('/comments/<int:comment_id>', methods=['HEAD'])
 def head_comment(comment_id):
@@ -244,7 +252,7 @@ def patch_article(article_id):
         article.content = data['content']
     if 'author' in data:
         article.author = data['author']
-    db.session.commit()
+    # db.session.commit()
     return jsonify({
         'article_id': article.article_id,
         'title': article.title,
