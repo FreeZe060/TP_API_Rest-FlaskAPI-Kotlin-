@@ -7,6 +7,24 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ma_db.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
+# Route d'accueil avec la documentation de l'API
+@app.route('/', methods=['GET'])
+def home():
+    api_doc = {
+        "message": "Notre API:",
+        "endpoints": [
+            {
+                "path": "/articles",
+                "methods": ["GET", "POST", "PUT"],
+            },
+            {
+                "path": "/comments",
+                "methods": ["GET", "POST", "PUT", "DELETE"],
+            }
+        ]
+    }
+    return jsonify(api_doc)
+
 # Endpoint pour récupérer tous les articles (pagination)
 @app.route('/articles', methods=['GET'])
 def get_articles():
@@ -173,15 +191,77 @@ if __name__ == "__main__":
         populate_database(10)
     app.run(port=8000)
 
+@app.route('/comments/<int:comment_id>', methods=['PATCH'])
+def patch_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    data = request.json
+    if 'content' in data:
+        comment.content = data['content']
+    if 'author' in data:
+        comment.author = data['author']
+    db.session.commit()
+    return jsonify({
+        'comment_id': comment.comment_id,
+        'content': comment.content,
+        'author': comment.author,
+        'article_id': comment.article_id
+    })
+
+@app.route('/comments/<int:comment_id>', methods=['PUT'])
+def put_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    data = request.json
+    comment.content = data['content']  
+    comment.author = data['author']    
+    db.session.commit()
+    return jsonify({
+        'comment_id': comment.comment_id,
+        'content': comment.content,
+        'author': comment.author,
+        'article_id': comment.article_id
+    })
+
+@app.route('/articles/<int:article_id>', methods=['PATCH'])
+def patch_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    data = request.json
+    if 'title' in data:
+        article.title = data['title']
+    if 'slug' in data:
+        article.slug = data['slug']
+    if 'content' in data:
+        article.content = data['content']
+    if 'author' in data:
+        article.author = data['author']
+    db.session.commit()
+    return jsonify({
+        'article_id': article.article_id,
+        'title': article.title,
+        'slug': article.slug,
+        'content': article.content,
+        'author': article.author
+    })
+
+@app.route('/articles/<int:article_id>', methods=['HEAD'])
+def head_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    
+    response = app.make_response(('', 200))  
+    response.headers['X-Article-Exist'] = 'True' 
+    response.headers['Last-Modified'] = article.updated_at.strftime('%a, %d %b %Y %H:%M:%S GMT') 
+    return response
+
+
 
 @app.errorhandler(500)
 def internal_server_error(error):
-    return jsonify({'error': 'Internal Server Error', 'message': str(error)}), 500
+    return jsonify({'error': 'Oops, something went wrong on our side!', 'message': str(error)}), 500
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return jsonify({'error': 'Not Found', 'message': str(error)}), 404
+    return jsonify({'error': 'Sorry, we couldn\'t find what you were looking for!', 'message': str(error)}), 404
 
 @app.errorhandler(405)
 def method_not_allowed_error(error):
-    return jsonify({'error': 'Method Not Allowed', 'message': str(error)}), 405
+    return jsonify({'error': 'This method is not allowed for the requested resource.', 'message': str(error)}), 405
+
