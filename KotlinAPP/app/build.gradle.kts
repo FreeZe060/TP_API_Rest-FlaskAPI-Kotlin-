@@ -1,7 +1,6 @@
 plugins {
     kotlin("multiplatform") version "1.8.20" // Version de Kotlin
     id("org.jetbrains.compose") version "1.5.0" // Version de Compose
-    application // Plugin pour l'application (permet de définir la tâche `run`)
 }
 
 repositories {
@@ -28,18 +27,12 @@ kotlin {
 
 // Supprimer ou configurer différemment la tâche `run` du plugin `application`
 // tasks.named("run").configure {
-//     enabled = false // Désactive la tâche `run` par défaut
-// }
-
-application {
-    // Pas besoin de définir une tâche `run` ici
-    // mainClass.set("org.example.AppKt") // Définir la classe principale ici pour Compose
-}
+//     enabled = false // Désactive la tâche `run` par défa
 
 // Configuration spécifique à Compose Desktop
 compose.desktop {
     application {
-        mainClass = "org.example.AppKt" // Classe principale de l'application Compose
+        mainClass = "org.example.AppKt"
     }
 }
 

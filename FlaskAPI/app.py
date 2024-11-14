@@ -221,6 +221,17 @@ def put_comment(comment_id):
         'article_id': comment.article_id
     })
 
+@app.route('/comments/<int:comment_id>', methods=['HEAD'])
+def head_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+
+    response = app.make_response('', 200)  
+    response.headers['Last-Modified'] = comment.created_on.strftime('%a, %d %b %Y %H:%M:%S GMT')
+    response.headers['Cache-Control'] = 'public, max-age=3600'  
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['ETag'] = f'comment-{comment.comment_id}-{hash(comment.content)}'
+    return response
+
 @app.route('/articles/<int:article_id>', methods=['PATCH'])
 def patch_article(article_id):
     article = Article.query.get_or_404(article_id)
