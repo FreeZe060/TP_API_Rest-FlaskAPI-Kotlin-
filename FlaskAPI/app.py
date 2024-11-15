@@ -185,12 +185,6 @@ def delete_comment(comment_id):
     db.session.commit()
     return '', 204
 
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        populate_database(10)
-    app.run(port=8000)
-
 @app.route('/comments/<int:comment_id>', methods=['PATCH'])
 def patch_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
@@ -203,14 +197,13 @@ def patch_comment(comment_id):
         if not data['author'].strip():
             return jsonify({"error": "L'auteur ne peut pas être vide"}), 400
         comment.author = data['author']
-    # db.session.commit()
+    db.session.commit()
     return jsonify({
         'comment_id': comment.comment_id,
         'content': comment.content,
         'author': comment.author,
         'article_id': comment.article_id
     })
-
 
 @app.route('/comments/<int:comment_id>', methods=['PUT'])
 def put_comment(comment_id):
@@ -233,7 +226,7 @@ def put_comment(comment_id):
 def head_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
 
-    response = app.make_response('', 200)  
+    response = app.make_response(('', 200))  
     response.headers['Last-Modified'] = comment.created_on.strftime('%a, %d %b %Y %H:%M:%S GMT')
     response.headers['Cache-Control'] = 'public, max-age=3600'  
     response.headers['Content-Type'] = 'application/json'
@@ -252,7 +245,7 @@ def patch_article(article_id):
         article.content = data['content']
     if 'author' in data:
         article.author = data['author']
-    # db.session.commit()
+    db.session.commit()
     return jsonify({
         'article_id': article.article_id,
         'title': article.title,
@@ -266,11 +259,11 @@ def head_article(article_id):
     article = Article.query.get_or_404(article_id)
     
     response = app.make_response(('', 200))  
-    response.headers['X-Article-Exist'] = 'True' 
     response.headers['Last-Modified'] = article.updated_at.strftime('%a, %d %b %Y %H:%M:%S GMT') 
+    response.headers['Cache-Control'] = 'public, max-age=3600'  
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['ETag'] = f'comment-{article.comment_id}-{hash(article.content)}'
     return response
-
-
 
 @app.errorhandler(500)
 def internal_server_error(error):
@@ -284,3 +277,8 @@ def not_found_error(error):
 def method_not_allowed_error(error):
     return jsonify({'error': 'This method is not allowed for the requested resource.', 'message': str(error)}), 405
 
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        populate_database(10)
+    app.run(port=8000)
